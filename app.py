@@ -30,7 +30,10 @@ if role == "👷 עובד (דיווח)":
             urgency = st.select_slider("רמת דחיפות", options=["אפשר לחכות", "דחוף", "קריטי"])
         
         description = st.text_area("תיאור התקלה")
-        picture = st.camera_input("צלם תמונה של התקלה")
+        show_camera = st.checkbox("📸 לחץ כאן כדי לצלם תמונה")
+pic = None
+if show_camera:
+    pic = st.camera_input("צלם את התקלה")
         
         submitted = st.form_submit_button("שלח דיווח")
         
@@ -90,3 +93,4 @@ else:
             if pd.notna(row["תמונה"]) and row["תמונה"] != "":
 
                 st.image(row["תמונה"], caption=f"תמונה מתקלה {id_edit}", width=400)
+
