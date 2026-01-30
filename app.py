@@ -21,7 +21,7 @@ st.title("🛠️ ניהול תקלות המפעל")
 if 'show_cam' not in st.session_state:
     st.session_state.show_cam = False
 
-ADMIN_PASSWORD = st.secrets.get("admin_password", "1234")
+ADMIN_PASSWORD = st.secrets.get("admin_password", "2611")
 
 role = st.sidebar.radio("תפקיד:", ["👷 עובד (דיווח)", "👨‍💼 מנהל (שליטה)"])
 
@@ -106,3 +106,4 @@ else:
             img_file = df[df["מזהה"] == id_to_up]["תמונה"].values[0]
             if img_file and os.path.exists(str(img_file)):
                 st.image(str(img_file), width=400)
+
