@@ -31,7 +31,7 @@ if role == "👷 עובד (דיווח)":
     # שדות הדיווח מחוץ לטופס כדי שהמצלמה תעבוד דינמית
     col1, col2 = st.columns(2)
     with col1:
-        dept = st.selectbox("מחלקה", ["ייצור", "מחסן", "אריזה", "אחזקה"])
+        dept = st.selectbox("מחלקה", ["ייצור", "מחסן לוגסטי","נוזלים גליל","תדיראן","סבון","קפסולות","מגבונים", "אריזה", "פלסטיק"])
         machine = st.text_input("מכונה / מיקום")
     with col2:
         urgency = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"])
@@ -106,4 +106,5 @@ else:
             img_file = df[df["מזהה"] == id_to_up]["תמונה"].values[0]
             if img_file and os.path.exists(str(img_file)):
                 st.image(str(img_file), width=400)
+
 
