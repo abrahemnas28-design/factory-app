@@ -4,7 +4,15 @@ import os
 import requests
 from datetime import datetime
 
-hide_st_style
+# קוד להסתרת התפריטים מהעובד
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # הגדרות קבצים - שמות פנימיים באנגלית למניעת שגיאות
 DATA_FILE = "factory_data.csv"
@@ -123,6 +131,7 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
 
 
