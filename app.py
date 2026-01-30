@@ -3,7 +3,6 @@ import pandas as pd
 import os
 import requests
 from datetime import datetime
-from PIL import Image
 
 # הגדרות קבצים
 DATA_FILE = "factory_data.csv"
@@ -32,13 +31,13 @@ st.title("🛠️ ניהול תקלות המפעל")
 if 'show_cam' not in st.session_state:
     st.session_state.show_cam = False
 
-ADMIN_PASSWORD = st.secrets.get("admin_password", "1234")
+ADMIN_PASSWORD = st.secrets.get("admin_password", "261197")
 role = st.sidebar.radio("בחר תפקיד:", ["👷 עובד (דיווח)", "👨‍💼 מנהל (שליטה)"])
 
 if role == "👷 עובד (דיווח)":
     st.header("דיווח על תקלה")
     worker_name = st.text_input("שם העובד המדווח")
-    dept = st.selectbox("מחלקה", ["ייצור", "מחסן", "אריזה", "אחזקה"])
+    dept = st.selectbox("מחלקה", ["ייצור", "נוזלים גליל","פלסטיק","תדיראן","סלפונציה","סבון","מגבונים","קפסולות", "מחסן", "אריזה"])
     machine = st.text_input("מכונה / מיקום")
     urgency = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"])
     desc = st.text_area("תיאור התקלה")
@@ -61,56 +60,4 @@ if role == "👷 עובד (דיווח)":
                 with open(img_path, "wb") as f:
                     f.write(pic.getbuffer())
             
-            new_row = pd.DataFrame([{"מזהה": new_id, "זמן": time_now, "שם העובד": worker_name, "מחלקה": dept, "מכונה": machine, "תיאור": desc, "דחיפות": urgency, "סטטוס": "חדש", "הערת מנהל": "", "תמונה": img_path}])
-            df = pd.concat([df, new_row], ignore_index=True)
-            df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-            send_telegram_msg(worker_name, machine, desc, urgency)
-            st.session_state.show_cam = False
-            st.rerun()
-        else:
-            st.error("נא למלא שם, מכונה ותיאור")
-
-else:
-    st.header("לוח בקרה למנהל")
-    input_pw = st.sidebar.text_input("הכנס סיסמה", type="password")
-    
-    if input_pw == ADMIN_PASSWORD:
-        df = pd.read_csv(DATA_FILE)
-        tab = st.radio("תצוגה:", ["תקלות פתוחות", "ארכיון"], horizontal=True)
-        
-        view_df = df[df["סטטוס"] != "טופל"] if tab == "תקלות פתוחות" else df[df["סטטוס"] == "טופל"]
-        st.dataframe(view_df, use_container_width=True)
-
-        st.divider()
-        st.subheader("⚙️ עדכון תקלה וצפייה בתמונה")
-        
-        col_act, col_img = st.columns([1, 1])
-        
-        with col_act:
-            id_to_act = st.number_input("הזן מזהה תקלה (ID) לבדיקה ועדכון", min_value=1, step=1)
-            new_status = st.selectbox("שינוי סטטוס ל:", ["בביצוע", "טופל"])
-            admin_note = st.text_input("הערת מנהל")
-            
-            if st.button("✅ שמור עדכון", use_container_width=True):
-                if id_to_act in df["מזהה"].values:
-                    df.loc[df["מזהה"] == id_to_act, "סטטוס"] = new_status
-                    df.loc[df["מזה_ה"] == id_to_act, "הערת מנהל"] = admin_note
-                    df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-                    st.rerun()
-            
-            if tab == "ארכיון" and st.button("🗑️ מחק תקלה לצמיתות", use_container_width=True):
-                df = df[df["מזהה"] != id_to_act]
-                df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-                st.rerun()
-
-        with col_img:
-            # כאן מופיעה התמונה!
-            if id_to_act in df["מזהה"].values:
-                img_file = df.loc[df["מזהה"] == id_to_act, "תמונה"].values[0]
-                if pd.notna(img_file) and img_file != "" and os.path.exists(str(img_file)):
-                    st.image(str(img_file), caption=f"תמונה עבור תקלה {id_to_act}", width=300)
-                else:
-                    st.info("אין תמונה זמינה לתקלה זו")
-
-    else:
-        st.info("נא להזין סיסמה נכונה")
+            new_row = pd.DataFrame([{"מזהה": new_id, "ז
