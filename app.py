@@ -4,6 +4,8 @@ import os
 import requests
 from datetime import datetime
 
+hide_st_style
+
 # הגדרות קבצים - שמות פנימיים באנגלית למניעת שגיאות
 DATA_FILE = "factory_data.csv"
 IMAGE_FOLDER = "fault_images"
@@ -121,6 +123,7 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
 
 
