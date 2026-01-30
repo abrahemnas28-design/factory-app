@@ -58,8 +58,8 @@ if role == "👷 עובד (דיווח)":
     if st.session_state.show_cam:
         pic = st.camera_input("צלם כאן")
 
-if st.button("🚀 שלח דיווח", use_container_width=True):
-    if w_mach and w_desc and w_name:
+      if st.button("🚀 שלח דיווח", use_container_width=True):
+          if w_mach and w_desc and w_name:
             df = pd.read_csv(DATA_FILE)
             new_id = int(df["id"].max() + 1) if not df.empty else 1
             time_now = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -120,5 +120,6 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
 
