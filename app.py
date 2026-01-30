@@ -31,7 +31,7 @@ st.title("🛠️ ניהול תקלות המפעל")
 if 'show_cam' not in st.session_state:
     st.session_state.show_cam = False
 
-ADMIN_PASSWORD = st.secrets.get("admin_password", "1234")
+ADMIN_PASSWORD = st.secrets.get("admin_password", "261197")
 role = st.sidebar.radio("בחר תפקיד:", ["👷 עובד (דיווח)", "👨‍💼 מנהל (שליטה)"])
 
 if role == "👷 עובד (דיווח)":
@@ -106,3 +106,4 @@ else:
                     st.rerun()
     else:
         st.info("נא להזין סיסמה נכונה כדי לראות נתונים")
+
