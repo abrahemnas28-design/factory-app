@@ -28,7 +28,7 @@ def send_telegram_msg(worker, machine, desc, urgency):
         pass
 
 st.set_page_config(page_title="מערכת תקלות - אברהים", layout="wide")
-st.title("🛠️ ניהול תקלות המפעל")
+st.title("🛠️ :blue[ניהול תקלות המפעל]")
 
 if 'show_cam' not in st.session_state:
     st.session_state.show_cam = False
@@ -120,3 +120,4 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
