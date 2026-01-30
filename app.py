@@ -36,7 +36,7 @@ if role == "👷 עובד (דיווח)":
     st.header("דיווח על תקלה")
     
     worker_name = st.text_input("שם העובד המדווח")
-    dept = st.selectbox("מחלקה", ["ייצור", "מחסן", "אריזה", "אחזקה"])
+    dept = st.selectbox("מחלקה", ["ייצור","נוזלים גליל","פלסטיק", "סבון" ,"תדיראן" ,"קפסולות" , "מחסן", "אריזה", "מגבונים","טבליות"])
     machine = st.text_input("מכונה / מיקום")
     urgency = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"])
     desc = st.text_area("תיאור התקלה")
@@ -96,3 +96,4 @@ else:
                 df = df[df["מזהה"] != id_to_del]
                 df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
                 st.rerun()
+
