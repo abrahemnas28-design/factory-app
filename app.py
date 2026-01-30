@@ -7,7 +7,7 @@ from datetime import datetime
 # קוד להסתרת התפריטים מהעובד
 hide_st_style = """
             <style>
-            #MainMenu {visibility: hidden;}
+            
             footer {visibility: hidden;}
             header {visibility: hidden;}
             </style>
@@ -131,6 +131,7 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
 
 
