@@ -61,7 +61,7 @@ if role == "👷 עובד (דיווח)":
 else:
     st.header("לוח בקרה למנהל")
     pw = st.sidebar.text_input("סיסמה", type="password")
-    if pw == "1234":
+    if pw == "2611":
         df = pd.read_csv(DATA_FILE)
         view = st.radio("הצג:", ["פתוחות", "ארכיון"], horizontal=True)
         
@@ -88,4 +88,5 @@ else:
         if id_edit in df["מזהה"].values:
             row = df[df["מזהה"] == id_edit].iloc[0]
             if pd.notna(row["תמונה"]) and row["תמונה"] != "":
+
                 st.image(row["תמונה"], caption=f"תמונה מתקלה {id_edit}", width=400)
