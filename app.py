@@ -16,9 +16,6 @@ cols = ["id", "time", "worker", "dept", "machine", "description", "urgency", "st
 if not os.path.exists(DATA_FILE):
     df = pd.DataFrame(columns=cols)
     df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-# תוספת קטנה לקוד כדי לראות מה קורה
-response = requests.get(url)
-st.write(f"סטטוס שליחה: {response.status_code}") # זה ידפיס על המסך אם זה הצליח (200) או נכשל (400)
 
 def send_telegram_msg(worker, machine, desc, urgency):
     try:
@@ -124,6 +121,7 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
 
 
