@@ -33,7 +33,7 @@ st.title("🛠️ :blue[ניהול תקלות המפעל]")
 if 'show_cam' not in st.session_state:
     st.session_state.show_cam = False
 
-ADMIN_PASSWORD = st.secrets.get("admin_password", "261197")
+ADMIN_PASSWORD = st.secrets.get("admin_password", "1111")
 role = st.sidebar.radio("בחר תפקיד:", ["👷 עובד (דיווח)", "👨‍💼 מנהל (שליטה)"])
 
 # מיפוי שמות עמודות לתצוגה בעברית
@@ -121,4 +121,5 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
