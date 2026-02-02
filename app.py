@@ -86,9 +86,16 @@ else:
     if input_pw == ADMIN_PASSWORD:
         df = pd.read_csv(DATA_FILE)
         tab = st.radio("תצוגה:", ["תקלות פתוחות", "ארכיון"], horizontal=True)
+
+        # הגדרת הסטטוסים שיופיעו בארכיון
+        closed_list = ["טופל", "ביצוע חלקי"]
         
-        view_df = df[df["status"] != "טופל"] if tab == "תקלות פתוחות" else df[df["status"] == "טופל"]
-         view_df = df[df["status"] != "ביצוע חלקי"] if tab == "תקלות פתוחות" else df[df["status"] == "ביצוע חלקי"]
+        if tab == "תקלות פתוחות":
+            # מציג את כל מה שסטטוס שלו הוא לא 'טופל' וגם לא 'ביצוע חלקי'
+            view_df = df[~df["status"].isin(closed_list)]
+        else:
+            # מציג בארכיון רק את מה שכן ברשימה
+            view_df = df[df["status"].isin(closed_list)]
         
         # הצגת הטבלה עם שמות בעברית
         st.dataframe(view_df.rename(columns=hebrew_columns), use_container_width=True)
@@ -122,6 +129,7 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
 
 
