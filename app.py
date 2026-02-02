@@ -87,7 +87,7 @@ else:
         df = pd.read_csv(DATA_FILE)
         tab = st.radio("תצוגה:", ["תקלות פתוחות", "ארכיון"], horizontal=True)
         
-        view_df = df[df["status"] != "טופל"] if tab == "תקלות פתוחות" else df[df["status"] == "טופל"]
+        view_df = df[df["status"] != "טופל","ביצוע חלקי"] if tab == "תקלות פתוחות" else df[df["status"] == "טופל","ביצוע חלקי"]
         
         # הצגת הטבלה עם שמות בעברית
         st.dataframe(view_df.rename(columns=hebrew_columns), use_container_width=True)
@@ -99,7 +99,7 @@ else:
         
         with col_act:
             id_to_act = st.number_input("הזן מזהה תקלה (ID)", min_value=1, step=1)
-            new_status = st.selectbox("שינוי סטטוס:", ["בביצוע", "טופל"])
+            new_status = st.selectbox("שינוי סטטוס:", ["בביצוע", "ביצוע חלקי" , "טופל"])
             a_note = st.text_input("הערת מנהל")
             
             if st.button("✅ שמור עדכון"):
@@ -121,6 +121,7 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
 
 
