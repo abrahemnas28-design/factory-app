@@ -234,46 +234,58 @@ if role == "👷 עובד (דיווח)":
             st.rerun()
         else:
             st.error("⚠️ נא למלא את כל השדות (שם, מכונה ותיאור)")
+
 else:
-    st.header("לוח בקרה למנהל")
-    input_pw = st.sidebar.text_input("הכנס סיסמה", type="password")
-    
-    if input_pw == ADMIN_PASSWORD:
-        df = pd.read_csv(DATA_FILE)
-        tab = st.radio("תצוגה:", ["תקלות פתוחות", "ארכיון"], horizontal=True)
-        
-        view_df = df[df["status"] != "טופל"] if tab == "תקלות פתוחות" else df[df["status"] == "טופל"]
-        
-        # הצגת הטבלה עם שמות בעברית
-        st.dataframe(view_df.rename(columns=hebrew_columns), use_container_width=True)
+    st.header("לוח בקרה למנהל")
+    input_pw = st.sidebar.text_input("הכנס סיסמה", type="password")
+    
+    if input_pw == ADMIN_PASSWORD:
+        df = pd.read_csv(DATA_FILE)
+        tab = st.radio("תצוגה:", ["תקלות פתוחות", "ארכיון"], horizontal=True)
 
-        st.divider()
-        st.subheader("⚙️ עדכון תקלה וצפייה בתמונה")
-        
-        col_act, col_img = st.columns([1, 1])
-        
-        with col_act:
-            id_to_act = st.number_input("הזן מזהה תקלה (ID)", min_value=1, step=1)
-            new_status = st.selectbox("שינוי סטטוס:", ["בביצוע", "טופל"])
-            a_note = st.text_input("הערת מנהל")
-            
-            if st.button("✅ שמור עדכון"):
-                if id_to_act in df["id"].values:
-                    df.loc[df["id"] == id_to_act, "status"] = new_status
-                    df.loc[df["id"] == id_to_act, "admin_note"] = a_note
-                    df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-                    st.rerun()
-            
-            if tab == "ארכיון" and st.button("🗑️ מחק לצמיתות"):
-                df = df[df["id"] != id_to_act]
-                df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-                st.rerun()
+        # --- תיקון השגיאה: לוגיקת סינון נכונה ---
+        closed_list = ["טופל", "ביצוע חלקי"]
+        
+        if tab == "תקלות פתוחות":
+            # משתמשים ב-isin כדי לבדוק מול רשימה
+            view_df = df[~df["status"].isin(closed_list)]
+        else:
+            view_df = df[df["status"].isin(closed_list)]
+        
+        st.dataframe(view_df.rename(columns=hebrew_columns), use_container_width=True)
 
-        with col_img:
-            if id_to_act in df["id"].values:
-                img_path = df.loc[df["id"] == id_to_act, "image"].values[0]
-                if pd.notna(img_path) and img_path != "" and os.path.exists(str(img_path)):
-                    st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
-                else:
-                    st.info("אין תמונה לתקלה זו")
+        st.divider()
+        st.subheader("⚙️ עדכון תקלה וצפייה בתמונה")
+        
+        col_act, col_img = st.columns([1, 1])
+        
+        with col_act:
+            id_to_act = st.number_input("הזן מזהה תקלה (ID)", min_value=1, step=1)
+            # וודא שביצוע חלקי מופיע כאן
+            new_status = st.selectbox("שינוי סטטוס:", ["בביצוע", "ביצוע חלקי", "טופל"])
+            a_note = st.text_input("הערת מנהל")
+            
+            if st.button("✅ שמור עדכון"):
+                if id_to_act in df["id"].values:
+                    df.loc[df["id"] == id_to_act, "status"] = new_status
+                    df.loc[df["id"] == id_to_act, "admin_note"] = a_note
+                    df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
+                    st.success("הסטטוס עודכן!")
+                    st.rerun()
+            
+            # --- כאן החזרנו את כפתור המחיקה שנעלם ---
+            if tab == "ארכיון":
+                if st.button("🗑️ מחק לצמיתות"):
+                    if id_to_act in df["id"].values:
+                        df = df[df["id"] != id_to_act]
+                        df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
+                        st.warning(f"תקלה {id_to_act} נמחקה מהארכיון")
+                        st.rerun()
 
+        with col_img:
+            if id_to_act in df["id"].values:
+                img_path = df.loc[df["id"] == id_to_act, "image"].values[0]
+                if pd.notna(img_path) and img_path != "" and os.path.exists(str(img_path)):
+                    st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
+                else:
+                    st.info("אין תמונה לתקלה זו")
