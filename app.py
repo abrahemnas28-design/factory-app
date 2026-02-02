@@ -4,6 +4,13 @@ import os
 import requests
 from datetime import datetime
 
+import streamlit as st
+from streamlit_autorefresh import st_autorefresh
+
+# רענון אוטומטי כל 5 דקות
+# כל עוד הטלפון של המנהל או של עובד פתוח על האתר, האתר לא יירדם
+st_autorefresh(interval=5 * 60 * 1000, key="keep_alive")
+
 # הגדרות קבצים
 DATA_FILE = "factory_data.csv"
 IMAGE_FOLDER = "fault_images"
@@ -144,3 +151,4 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
