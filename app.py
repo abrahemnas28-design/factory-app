@@ -99,7 +99,7 @@ else:
         
         with col_act:
             id_to_act = st.number_input("הזן מזהה תקלה (ID)", min_value=1, step=1)
-            new_status = st.selectbox("שינוי סטטוס:", ["בביצוע", "טופל"])
+            new_status = st.selectbox("שינוי סטטוס:", ["בביצוע", "ביצוע חלקי","טופל"])
             a_note = st.text_input("הערת מנהל")
             
             if st.button("✅ שמור עדכון"):
@@ -121,4 +121,5 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
