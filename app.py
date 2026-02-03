@@ -3,12 +3,10 @@ import pandas as pd
 import os
 import requests
 from datetime import datetime
-
-import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+import time
 
-# רענון אוטומטי כל 5 דקות
-# כל עוד הטלפון של המנהל או של עובד פתוח על האתר, האתר לא יירדם
+# 1. רענון אוטומטי כל 5 דקות כדי לשמור על השרת ער (Keep-Alive)
 st_autorefresh(interval=5 * 60 * 1000, key="keep_alive")
 
 # הגדרות קבצים
@@ -18,13 +16,13 @@ IMAGE_FOLDER = "fault_images"
 if not os.path.exists(IMAGE_FOLDER):
     os.makedirs(IMAGE_FOLDER)
 
-# יצירת קובץ אם לא קיים
+# יצירת קובץ נתונים אם לא קיים
 cols = ["id", "time", "worker", "dept", "machine", "description", "urgency", "status", "admin_note", "image"]
 if not os.path.exists(DATA_FILE):
     df = pd.DataFrame(columns=cols)
     df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
 
-# --- מערכת כניסה ---
+# --- 2. מערכת כניסה לאתר ---
 SITE_PASSWORD = st.secrets.get("site_password", "1234")
 
 if "authenticated" not in st.session_state:
@@ -41,6 +39,7 @@ if not st.session_state.authenticated:
             st.error("סיסמה שגויה")
     st.stop()
 
+# --- 3. פונקציית טלגרם ---
 def send_telegram_msg(worker, machine, desc, urgency):
     try:
         token = st.secrets["telegram_token"]
@@ -51,9 +50,12 @@ def send_telegram_msg(worker, machine, desc, urgency):
     except:
         pass
 
+# הגדרות דף ראשי
 st.set_page_config(page_title="מערכת תקלות - אברהים", layout="wide")
 st.title("🛠️ :blue[ניהול תקלות המפעל]")
 
+if "form_iteration" not in st.session_state:
+    st.session_state.form_iteration = 0
 if 'show_cam' not in st.session_state:
     st.session_state.show_cam = False
 
@@ -66,21 +68,16 @@ hebrew_columns = {
     "status": "סטטוס", "admin_note": "הערת מנהל", "image": "תמונה"
 }
 
-# יצירת מפתח ייחודי בזיכרון אם הוא לא קיים
-if "form_iteration" not in st.session_state:
-    st.session_state.form_iteration = 0
-
+# --- 4. ממשק עובד ---
 if role == "👷 עובד (דיווח)":
     st.header("דיווח על תקלה")
-    
-    # שימוש ב-Key משתנה גורם לכל השדות להתאפס לחלוטין כשהמפתח גדל
     iter = st.session_state.form_iteration
     
-    w_name = st.text_input("שם העובד המדווח", key=f"name_{iter}")
-    w_dept = st.selectbox("מחלקה", ["ייצור", "נוזלים גליל","פלסטיק","תדיראן","סלפונציה","סבון","מגבונים","קפסולות", "מחסן", "אריזה"], key=f"dept_{iter}")
-    w_mach = st.text_input("מכונה / מיקום", key=f"mach_{iter}")
-    w_urg = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"], key=f"urg_{iter}")
-    w_desc = st.text_area("תיאור התקלה", key=f"desc_{iter}")
+    w_name = st.text_input("שם העובד המדווח", key=f"n_{iter}")
+    w_dept = st.selectbox("מחלקה", ["ייצור", "נוזלים גליל","פלסטיק","תדיראן","סלפונציה","סבון","מגבונים","קפסולות", "מחסן", "אריזה"], key=f"d_{iter}")
+    w_mach = st.text_input("מכונה / מיקום", key=f"m_{iter}")
+    w_urg = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"], key=f"u_{iter}")
+    w_desc = st.text_area("תיאור התקלה", key=f"de_{iter}")
 
     if st.button("📸 צילום תמונה", use_container_width=True):
         st.session_state.show_cam = True
@@ -106,42 +103,28 @@ if role == "👷 עובד (דיווח)":
             
             send_telegram_msg(w_name, w_mach, w_desc, w_urg)
             
-            # --- הפעולה שמנקה הכל ---
             st.success(f"✅ הדיווח נשלח בהצלחה!")
-            
-            # 1. מגדילים את המונה - זה גורם ל-Streamlit לחשוב שאלו שדות חדשים לגמרי
             st.session_state.form_iteration += 1
-            # 2. סוגרים את המצלמה
             st.session_state.show_cam = False
-            
-            # השהייה קצרה כדי שיראו את ההודעה הירוקה
-            import time
             time.sleep(1.5)
             st.rerun()
         else:
             st.error("⚠️ נא למלא את כל השדות")
 
-
+# --- 5. ממשק מנהל ---
 else:
     st.header("לוח בקרה למנהל")
-    input_pw = st.sidebar.text_input("הכנס סיסמה", type="password")
+    input_pw = st.sidebar.text_input("הכנס סיסמת מנהל", type="password")
     
     if input_pw == ADMIN_PASSWORD:
         df = pd.read_csv(DATA_FILE)
         tab = st.radio("תצוגה:", ["תקלות פתוחות", "ארכיון"], horizontal=True)
         
-        # רשימת סטטוסים לארכיון
         closed_list = ["טופל", "ביצוע חלקי"]
-        
-        if tab == "תקלות פתוחות":
-            view_df = df[~df["status"].isin(closed_list)]
-        else:
-            view_df = df[df["status"].isin(closed_list)]
+        view_df = df[~df["status"].isin(closed_list)] if tab == "תקלות פתוחות" else df[df["status"].isin(closed_list)]
         
         st.dataframe(view_df.rename(columns=hebrew_columns), use_container_width=True)
-
         st.divider()
-        st.subheader("⚙️ עדכון תקלה וצפייה בתמונה")
         
         col_act, col_img = st.columns([1, 1])
         with col_act:
@@ -151,27 +134,25 @@ else:
             
             if st.button("✅ שמור עדכון"):
                 if id_to_act in df["id"].values:
-                    df.loc[df["id"] == id_to_act, "status"] = new_status
-                    df.loc[df["id"] == id_to_act, "admin_note"] = a_note
+                    # בדיקת חובת הערה לביצוע חלקי
+                    if new_status == "ביצוע חלקי" and not a_note.strip():
+                        st.error("⚠️ חובה לכתוב הערת מנהל בסטטוס 'ביצוע חלקי'!")
+                    else:
+                        df.loc[df["id"] == id_to_act, "status"] = new_status
+                        df.loc[df["id"] == id_to_act, "admin_note"] = a_note
+                        df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
+                        st.success("העדכון נשמר!")
+                        time.sleep(1)
+                        st.rerun()
+            
+            if tab == "ארכיון" and st.button("🗑️ מחק לצמיתות"):
+                if id_to_act in df["id"].values:
+                    df = df[df["id"] != id_to_act]
                     df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
                     st.rerun()
-            
-            # החזרת כפתור המחיקה לצמיתות
-            if tab == "ארכיון":
-                if st.button("🗑️ מחק לצמיתות"):
-                    if id_to_act in df["id"].values:
-                        df = df[df["id"] != id_to_act]
-                        df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-                        st.warning(f"תקלה {id_to_act} נמחקה מהמערכת")
-                        st.rerun()
 
         with col_img:
             if id_to_act in df["id"].values:
                 img_path = df.loc[df["id"] == id_to_act, "image"].values[0]
-                if pd.notna(img_path) and img_path != "" and os.path.exists(str(img_path)):
-                    st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
-                else:
-                    st.info("אין תמונה לתקלה זו")
-
-
-
+                if pd.notna(img_path) and os.path.exists(str(img_path)):
+                    st.image(str(img_path))
