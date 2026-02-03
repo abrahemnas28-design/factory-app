@@ -66,57 +66,60 @@ hebrew_columns = {
     "status": "סטטוס", "admin_note": "הערת מנהל", "image": "תמונה"
 }
 
+# יצירת מפתח ייחודי בזיכרון אם הוא לא קיים
+if "form_iteration" not in st.session_state:
+    st.session_state.form_iteration = 0
+
 if role == "👷 עובד (דיווח)":
     st.header("דיווח על תקלה")
     
-    # שימוש בתיבה אחת כדי לעטוף את הכל
-    with st.container():
-        w_name = st.text_input("שם העובד המדווח", key="name_input")
-        w_dept = st.selectbox("מחלקה", ["ייצור", "נוזלים גליל","פלסטיק","תדיראן","סלפונציה","סבון","מגבונים","קפסולות", "מחסן", "אריזה"], key="dept_input")
-        w_mach = st.text_input("מכונה / מיקום", key="mach_input")
-        w_urg = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"], key="urg_input")
-        w_desc = st.text_area("תיאור התקלה", key="desc_input")
+    # שימוש ב-Key משתנה גורם לכל השדות להתאפס לחלוטין כשהמפתח גדל
+    iter = st.session_state.form_iteration
+    
+    w_name = st.text_input("שם העובד המדווח", key=f"name_{iter}")
+    w_dept = st.selectbox("מחלקה", ["ייצור", "נוזלים גליל","פלסטיק","תדיראן","סלפונציה","סבון","מגבונים","קפסולות", "מחסן", "אריזה"], key=f"dept_{iter}")
+    w_mach = st.text_input("מכונה / מיקום", key=f"mach_{iter}")
+    w_urg = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"], key=f"urg_{iter}")
+    w_desc = st.text_area("תיאור התקלה", key=f"desc_{iter}")
 
-        if st.button("📸 צילום תמונה", use_container_width=True):
-            st.session_state.show_cam = True
-        
-        pic = None
-        if st.session_state.show_cam:
-            pic = st.camera_input("צלם כאן")
+    if st.button("📸 צילום תמונה", use_container_width=True):
+        st.session_state.show_cam = True
+    
+    pic = None
+    if st.session_state.show_cam:
+        pic = st.camera_input("צלם כאן")
 
-        if st.button("🚀 שלח דיווח", use_container_width=True, type="primary"):
-            if w_mach and w_desc and w_name:
-                df = pd.read_csv(DATA_FILE)
-                new_id = int(df["id"].max() + 1) if not df.empty else 1
-                time_now = datetime.now().strftime("%d/%m/%Y %H:%M")
-                img_p = ""
-                if pic:
-                    img_p = f"{IMAGE_FOLDER}/img_{new_id}.png"
-                    with open(img_p, "wb") as f:
-                        f.write(pic.getbuffer())
-                
-                # יצירת השורה החדשה
-                new_row = pd.DataFrame([{"id": new_id, "time": time_now, "worker": w_name, "dept": w_dept, "machine": w_mach, "description": w_desc, "urgency": w_urg, "status": "חדש", "admin_note": "", "image": img_p}])
-                df = pd.concat([df, new_row], ignore_index=True)
-                df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-                
-                # שליחת הודעות
-                send_telegram_msg(w_name, w_mach, w_desc, w_urg)
-                
-                # --- החלק שביקשת: הודעה ירוקה ואיפוס ---
-                st.success(f"✅ הדיווח על תקלה במכונה '{w_mach}' נשלח בהצלחה!")
-                
-                # איפוס המצלמה
-                st.session_state.show_cam = False
-                
-                # השהייה קצרה כדי שיוכלו לראות את ההודעה הירוקה לפני שהדף מתרענן ומתנקה
-                import time
-                time.sleep(2) 
-                
-                # הרצה מחדש מנקה את כל השדות אוטומטית (כי הם לא ב-session_state)
-                st.rerun()
-            else:
-                st.error("⚠️ נא למלא את כל השדות (שם, מכונה ותיאור)")
+    if st.button("🚀 שלח דיווח", use_container_width=True, type="primary"):
+        if w_mach and w_desc and w_name:
+            df = pd.read_csv(DATA_FILE)
+            new_id = int(df["id"].max() + 1) if not df.empty else 1
+            time_now = datetime.now().strftime("%d/%m/%Y %H:%M")
+            img_p = ""
+            if pic:
+                img_p = f"{IMAGE_FOLDER}/img_{new_id}.png"
+                with open(img_p, "wb") as f:
+                    f.write(pic.getbuffer())
+            
+            new_row = pd.DataFrame([{"id": new_id, "time": time_now, "worker": w_name, "dept": w_dept, "machine": w_mach, "description": w_desc, "urgency": w_urg, "status": "חדש", "admin_note": "", "image": img_p}])
+            df = pd.concat([df, new_row], ignore_index=True)
+            df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
+            
+            send_telegram_msg(w_name, w_mach, w_desc, w_urg)
+            
+            # --- הפעולה שמנקה הכל ---
+            st.success(f"✅ הדיווח נשלח בהצלחה!")
+            
+            # 1. מגדילים את המונה - זה גורם ל-Streamlit לחשוב שאלו שדות חדשים לגמרי
+            st.session_state.form_iteration += 1
+            # 2. סוגרים את המצלמה
+            st.session_state.show_cam = False
+            
+            # השהייה קצרה כדי שיראו את ההודעה הירוקה
+            import time
+            time.sleep(1.5)
+            st.rerun()
+        else:
+            st.error("⚠️ נא למלא את כל השדות")
 
 
 else:
@@ -169,5 +172,6 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
 
