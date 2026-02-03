@@ -68,39 +68,57 @@ hebrew_columns = {
 
 if role == "👷 עובד (דיווח)":
     st.header("דיווח על תקלה")
-    w_name = st.text_input("שם העובד המדווח")
-    w_dept = st.selectbox("מחלקה", ["ייצור", "נוזלים גליל","פלסטיק","תדיראן","סלפונציה","סבון","מגבונים","קפסולות", "מחסן", "אריזה"])
-    w_mach = st.text_input("מכונה / מיקום")
-    w_urg = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"])
-    w_desc = st.text_area("תיאור התקלה")
-
-    if st.button("📸 צילום תמונה", use_container_width=True):
-        st.session_state.show_cam = True
     
-    pic = None
-    if st.session_state.show_cam:
-        pic = st.camera_input("צלם כאן")
+    # שימוש בתיבה אחת כדי לעטוף את הכל
+    with st.container():
+        w_name = st.text_input("שם העובד המדווח", key="name_input")
+        w_dept = st.selectbox("מחלקה", ["ייצור", "נוזלים גליל","פלסטיק","תדיראן","סלפונציה","סבון","מגבונים","קפסולות", "מחסן", "אריזה"], key="dept_input")
+        w_mach = st.text_input("מכונה / מיקום", key="mach_input")
+        w_urg = st.selectbox("דחיפות", ["אפשר לחכות", "דחוף", "קריטי"], key="urg_input")
+        w_desc = st.text_area("תיאור התקלה", key="desc_input")
 
-    if st.button("🚀 שלח דיווח", use_container_width=True, type="primary"):
-        if w_mach and w_desc and w_name:
-            df = pd.read_csv(DATA_FILE)
-            new_id = int(df["id"].max() + 1) if not df.empty else 1
-            time_now = datetime.now().strftime("%d/%m/%Y %H:%M")
-            img_p = ""
-            if pic:
-                img_p = f"{IMAGE_FOLDER}/img_{new_id}.png"
-                with open(img_p, "wb") as f:
-                    f.write(pic.getbuffer())
-            
-            new_row = pd.DataFrame([{"id": new_id, "time": time_now, "worker": w_name, "dept": w_dept, "machine": w_mach, "description": w_desc, "urgency": w_urg, "status": "חדש", "admin_note": "", "image": img_p}])
-            df = pd.concat([df, new_row], ignore_index=True)
-            df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-            send_telegram_msg(w_name, w_mach, w_desc, w_urg)
-            st.session_state.show_cam = False
-            st.success("✅ הדיווח נשלח בהצלחה!")
-            st.rerun()
-        else:
-            st.error("⚠️ נא למלא את כל השדות")
+        if st.button("📸 צילום תמונה", use_container_width=True):
+            st.session_state.show_cam = True
+        
+        pic = None
+        if st.session_state.show_cam:
+            pic = st.camera_input("צלם כאן")
+
+        if st.button("🚀 שלח דיווח", use_container_width=True, type="primary"):
+            if w_mach and w_desc and w_name:
+                df = pd.read_csv(DATA_FILE)
+                new_id = int(df["id"].max() + 1) if not df.empty else 1
+                time_now = datetime.now().strftime("%d/%m/%Y %H:%M")
+                img_p = ""
+                if pic:
+                    img_p = f"{IMAGE_FOLDER}/img_{new_id}.png"
+                    with open(img_p, "wb") as f:
+                        f.write(pic.getbuffer())
+                
+                # יצירת השורה החדשה
+                new_row = pd.DataFrame([{"id": new_id, "time": time_now, "worker": w_name, "dept": w_dept, "machine": w_mach, "description": w_desc, "urgency": w_urg, "status": "חדש", "admin_note": "", "image": img_p}])
+                df = pd.concat([df, new_row], ignore_index=True)
+                df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
+                
+                # שליחת הודעות
+                send_telegram_msg(w_name, w_mach, w_desc, w_urg)
+                
+                # --- החלק שביקשת: הודעה ירוקה ואיפוס ---
+                st.success(f"✅ הדיווח על תקלה במכונה '{w_mach}' נשלח בהצלחה!")
+                
+                # איפוס המצלמה
+                st.session_state.show_cam = False
+                
+                # השהייה קצרה כדי שיוכלו לראות את ההודעה הירוקה לפני שהדף מתרענן ומתנקה
+                import time
+                time.sleep(2) 
+                
+                # הרצה מחדש מנקה את כל השדות אוטומטית (כי הם לא ב-session_state)
+                st.rerun()
+            else:
+                st.error("⚠️ נא למלא את כל השדות (שם, מכונה ותיאור)")
+
+
 else:
     st.header("לוח בקרה למנהל")
     input_pw = st.sidebar.text_input("הכנס סיסמה", type="password")
@@ -151,4 +169,5 @@ else:
                     st.image(str(img_path), caption=f"תמונה עבור מזהה {id_to_act}")
                 else:
                     st.info("אין תמונה לתקלה זו")
+
 
